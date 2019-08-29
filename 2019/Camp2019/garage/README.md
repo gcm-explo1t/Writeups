@@ -38,62 +38,65 @@ and provide you with a video feed of the garage.
 
 You cannot physically access the garages.
 
-Remote transceiver: [garage-e9cfbc3da45f4dd32c3ce3e98e141422830a8460d10a44e8388be53e27e13e41.zip](https://raw.githubusercontent.com/gcm-explo1t/Writeups/2019/Camp2019/garage/challenge/master/garage-e9cfbc3da45f4dd32c3ce3e98e141422830a8460d10a44e8388be53e27e13e41.zip)
+Remote transceiver: [garage-e9cfbc3da45f4dd32c3ce3e98e141422830a8460d10a44e8388be53e27e13e41.zip](https://github.com/gcm-explo1t/Writeups/raw/master/2019/Camp2019/garage/challenge/garage-e9cfbc3da45f4dd32c3ce3e98e141422830a8460d10a44e8388be53e27e13e41.zip)
 
 ## Solution
 First of all, it was key to start the delivered client and capture some signals with it. Next it was key, to find a tool which could represent the captured data. One of these tools are [Universal Radio Hacker](https://github.com/jopohl/urh) or [GNUradio](https://www.gnuradio.org/) for example. When the client listened more than 30 seconds, there should at least be 2 signals visible:
 
-BILD-SIGNALS
+![](signals_challs.png)
 
 Additionally, there was a Website, with a camera livestream of one of the Garages:
 
-BILD-GARAGE
+![](garage1_close.png)
 
 With a click on the button it was possible to open it and see a QR code:
 
-BILD-OffeneGarage
+![](garage1.png)
 
 If the QR code is decoded it said: 1n 0rd3r 2 5ee 4 flag 7ry the other 6arage
 Which firstly hinted the existence of another garage.
 
 The mechanism behind the button, was a click on the remote, which send the correct solution for one of the garages.
 
-So now if somebody listened via the limeSDR and the button was pressed, there were now 3 signals visible:
-
-BILD-SignalsSend
+So now if somebody listened via the limeSDR and the button was pressed, there were now 3 signals visible.
 
 The logical solution to this is, that there have to be 2 garages, where each of them sends a challenge and one remote, where it is possible for the user to send a correct response for garage 1.
 
 Now it was key to understand the protocol and the Challenge-Response these garages use. Extracting a single challenge-signal for each garage from the recorded data it looked like this:
 
-BILD-ChallengeSend1
+![](chall0.png)
+001011110101000111101100
 
-BILD-ChallengeSend2
+![](chall1.png)
+011011110101001101101110
+
 
 So with some more messages of these types it was possible to identify following message structure:
 
-2Bit Garage ID (00 or 01)
-5Bit Rolling Code (minutes%30)
-101010 Static
-11Bit Random (static until challenge solved)
+- 2Bit Garage ID (00 or 01)
+- 5Bit Rolling Code (minutes%30)
+- 101010 Static
+- 11Bit Random (static until challenge solved)
 
-Now the main task was, to analyze the succesfull response from garage 1. An extracted signal looked like this:
+Now the main task was, to analyze the succesfull response from garage 1. An extracted signal challenge and response looked like this:
 
-BILD-RESP1
+![](chall.png)
+
+![](resp.png)
 
 In direct comparison some data seemed the same, but there are also some differences. BUT, when we look back at the QR in garage one, it was some odd leet speak text...
 When you now look at only the digits of the text, you may recognize sth. at least, when you google "10325476" the first links directly reference to some MD5 implementations, as this number is one of the used constants.
 
 Thus, with this hint, it was known, that MD5 is used somewhere. With a bit try and error and some additional recordings of the full challenge-response messages, it is possible to identify, that the response protocol looked like this:
 
-2Bit Garage ID
-5Bit Rolling Code (minutes%30)
-0    Static (Identifier for a Response)
-16Bit `md5(challenge_as_interger)->last 16 Bit`
+- 2Bit Garage ID
+- 5Bit Rolling Code (minutes%30)
+- 0    Static (Identifier for a Response)
+- 16Bit `md5(challenge_as_interger)->last 16 Bit`
 
 Now the full protocol is know and the last step was to create a signal with the correct response for the garage 0. I used GNUradio for this:
 
-BILD-GNUradio
+![](gnuradio.png)
 
 When sending the created signal to the correct time, the second garage opened and the flag was visible.
 
