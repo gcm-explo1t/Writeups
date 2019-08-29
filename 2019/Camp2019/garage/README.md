@@ -2,12 +2,12 @@
 This challenge was the only Hardware On-Site Challenge and probably a last one for me on the Camp, because it was a mess to bring it to a stable level. Not only, was the dust a problem for the whole setup, but also the heat in the tent, constantly influenced the stability of the LimeSDR.
 
 Some funny fuckups:
-* Garages were 3D printed and when i set up the tent, the challenge was standing outside for like 15 minutes. During this time, the printed objects began to melt and 1 gate completely broke off...
+* Garages were 3D printed and when i set up the tent, the challenge was standing outside for like 15 minutes. During this time, the printed objects began to melt and 1 gate completely broke off... superglue FTW
 * I printed the QR code, which were inside the garages a few days before. They were at the maximum size of the garage, but after they melted, they did not fit any more. Luckily QRs have some error corection, so i just cut some stuff away and most of the time it was still readable.
-* As the challenge had a livestream to see the garages open up, i did not think about the problem of darkness in the night, as we did not have any light in the tent... Luckyli out neighbours got a spare one and so we could at least light up the garages at night.
+* As the challenge had a livestream to see the garages open up, i did not think about the problem of darkness in the night, as we did not have any light in the tent... By luck out neighbours got a spare one and so we could at least light up the garages at night.
 
 # Garage
-A pretty standard, but definitely not easy SDR challenge. The Goal was to decode the Garage Challenge/Response Signal and open the second Garage with the Flag.
+A pretty standard, but definitely not easy SDR challenge. The goal was to decode the garage challenge/response signal and open the second garage containing the Flag.
 
 ## Description
 In order to safeguard their flags, the ALLES team has brought their secure
@@ -45,7 +45,7 @@ First of all, it was key to start the delivered client and capture some signals 
 
 ![](signals_challs.png)
 
-Additionally, there was a Website, with a camera livestream of one of the Garages:
+Additionally, there was a website, with a camera livestream of one of the garages:
 
 ![](garage1_close.png)
 
@@ -53,8 +53,7 @@ With a click on the button it was possible to open it and see a QR code:
 
 ![](garage1.png)
 
-If the QR code is decoded it said: 1n 0rd3r 2 5ee 4 flag 7ry the other 6arage
-Which firstly hinted the existence of another garage.
+If the QR code is decoded it said: `1n 0rd3r 2 5ee 4 flag 7ry the other 6arage`, which firstly hinted the existence of another garage.
 
 The mechanism behind the button, was a click on the remote, which send the correct solution for one of the garages.
 
@@ -81,8 +80,10 @@ So with some more messages of these types it was possible to identify following 
 Now the main task was, to analyze the succesfull response from garage 1. An extracted signal challenge and response looked like this:
 
 ![](chall.png)
+010100010101001001101000
 
 ![](resp.png)
+010100000101000111001001
 
 In direct comparison some data seemed the same, but there are also some differences. BUT, when we look back at the QR in garage one, it was some odd leet speak text...
 When you now look at only the digits of the text, you may recognize sth. at least, when you google "10325476" the first links directly reference to some MD5 implementations, as this number is one of the used constants.
@@ -94,9 +95,11 @@ Thus, with this hint, it was known, that MD5 is used somewhere. With a bit try a
 - 0    Static (Identifier for a Response)
 - 16Bit `md5(challenge_as_interger)->last 16 Bit`
 
-Now the full protocol is know and the last step was to create a signal with the correct response for the garage 0. I used GNUradio for this:
+Now the full protocol is known and the last step was to create a signal with the correct response for the garage 0. I used GNUradio for this:
 
 ![](gnuradio.png)
+
+[garage-synthesize.grc](https://github.com/gcm-explo1t/Writeups/raw/master/2019/Camp2019/garage/garage-synthesize.grc)
 
 When sending the created signal to the correct time, the second garage opened and the flag was visible.
 
